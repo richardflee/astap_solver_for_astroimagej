@@ -45,6 +45,10 @@ import javax.swing.border.TitledBorder;
 public class AstapUi extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
+	private enum StateEnum {
+		ASTAP_STARTED, ASTAP_STOPPED;
+	}
+	
 	
 	// sub-folder to Solved folder, contains failed astap solve fits files
 	private final String FAILED_FOLDER = "SOLVE_FAILED";
@@ -61,6 +65,9 @@ public class AstapUi extends JFrame {
 	
 	// lists all files in user-selected folder with .fit, .fits or .fts extension 
 	private List<String> fitsFilePaths = null;
+	
+	private double raHr = 0.0;
+	private double spdDeg = 0.0;
 	
 	
 	private boolean isAstapRunning;
@@ -103,9 +110,16 @@ public class AstapUi extends JFrame {
 	private void doRunAstap() {
 		AstapUtils.deleteDirectory(Path.of(getPathToSolvedFolder()));
 		createSolvedFolders();
-		
-		astapTask = new AstapTask();
-		astapTask.execute();
+		updateFitsFilesList();
+		try {
+			setCentreCoords();
+			this.astapTask = new AstapTask();
+			this.astapTask.execute();			
+		} catch (Exception e) {
+			var message = "RA or Dec format error";
+			JOptionPane.showMessageDialog(null,  message);
+			configRunSettings(StateEnum.ASTAP_STOPPED);			
+		}
 	}
 	
 	/*
@@ -128,14 +142,10 @@ public class AstapUi extends JFrame {
 		// sets button text and enabled status then toggle START / STOP astap solver
 		runButton.addActionListener(e -> {
 			if (!isAstapRunning) {
-				runButton.setText(STOP);
-				importButton.setEnabled(false);
-				isAstapRunning = true;				
+				configRunSettings(StateEnum.ASTAP_STARTED);
 				doRunAstap();				
 			} else {
-				runButton.setText(START);
-				importButton.setEnabled(true);
-				isAstapRunning = false;
+				configRunSettings(StateEnum.ASTAP_STOPPED);
 				doStopAstap();
 			}
 		});
@@ -165,6 +175,22 @@ public class AstapUi extends JFrame {
 		});
 	}
 	
+	private void configRunSettings(StateEnum en) {
+		
+		switch (en) {
+			case ASTAP_STARTED:
+				runButton.setText(STOP);
+				importButton.setEnabled(false);
+				isAstapRunning = true;			
+				break;
+				
+			case ASTAP_STOPPED:
+				runButton.setText(START);
+				importButton.setEnabled(true);
+				isAstapRunning = false;			
+				break;
+		}
+	}
 	
 	/**
 	 * compiles a list of path strings for all fits files found in selected folder
@@ -346,12 +372,34 @@ public class AstapUi extends JFrame {
 		private String compileAstapCmdLine(String spath) {
 			spath = "\"" + spath + "\"";
 			String line = String.format("astap.exe -f %s -r 10 -m %.3f -update", spath, getMinStarWidth());
-			line = (isSaveLog() == true) ? line.concat(" -log") : line;
+			
+			// option to specify ra spd (dec+90) coords
+			line = (isAutoSelected()) ? line : line.concat(compileUserCoords());
+			
+			// option to append -log flag
+			line = (isSaveLog() == false) ? line : line.concat(" -log");
 			return line;
 		}
 		
 	} // AstapTask 
 	
+	/*
+	 * Compiles and returns line fragment comprising use-specified centre ra spd/dec coordinates
+	 */
+	private String compileUserCoords() {		
+		return String.format(" -ra %.6f -spd %.6f ", this.raHr, this.spdDeg);
+	}
+	
+	private void setCentreCoords() throws Exception {
+		if (! isAutoSelected()) {
+			String raHms = raTextField.getText();
+			this.raHr = AstapUtils.raHmsToRaHr(raHms);
+			
+			String decDms = decTextField.getText();
+			this.spdDeg = AstapUtils.decDmsToDecDeg(decDms) + 90.0;
+		}
+	}
+		
 	private double getMinStarWidth() {
 		return (double) widthSpinner.getValue();
 	}
@@ -359,6 +407,12 @@ public class AstapUi extends JFrame {
 	private boolean isSaveLog() {
 		return logCheckBox.isSelected();
 	}
+	
+	private boolean isAutoSelected() {
+		return autoCheckBox.isSelected();
+	}
+	
+	
 
 	private void initComponents() {
 		// JFormDesigner - Component initialization - DO NOT MODIFY
