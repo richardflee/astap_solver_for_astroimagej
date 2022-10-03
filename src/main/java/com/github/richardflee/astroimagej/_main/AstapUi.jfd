@@ -1,0 +1,135 @@
+JFDML JFormDesigner: "7.0.6.0.1131" Java: "17.0.1" encoding: "UTF-8"
+
+new FormModel {
+	contentType: "form/swing"
+	root: new FormRoot {
+		add( new FormWindow( "javax.swing.JFrame", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+			name: "this"
+			"title": "ASTAP for AstroImageJ"
+			"defaultCloseOperation": 2
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+				name: "dialogPane"
+				"border": new javax.swing.border.EmptyBorder( 12, 12, 12, 12 )
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+					"$horizontalGroup": "par l {seq {space :::p, par t {seq t {comp panel1:::::x, space u:::p, comp panel2:::p::p}, seq t {comp fitsTextField:::::x, space :::p, comp passTextField:1::p:36:p, space :::p, comp failTextField:1::p:36:p, space :::p, comp totalTextField:1::p:36:p}, comp folderTextField::::466:x}, space :::p, comp panel3:::p::p, space :::p}}"
+					"$verticalGroup": "par l {seq l {space :::p, par l {comp panel3:::::x, seq {par l {comp panel1:::::x, comp panel2:::::x}, space u:::p, par l {comp fitsTextField::t:p::p, par b:t {comp totalTextField::b:p::p, comp failTextField::b:p::p, comp passTextField::b:p::p}}, space :::p, comp folderTextField:::p::p}}, space :::p}}"
+				} ) {
+					name: "contentPanel"
+					"border": sfield com.jformdesigner.model.FormObject NULL_VALUE
+					add( new FormComponent( "javax.swing.JTextField" ) {
+						name: "fitsTextField"
+						"editable": false
+					} )
+					add( new FormComponent( "javax.swing.JTextField" ) {
+						name: "totalTextField"
+						"text": "0"
+						"editable": false
+						"horizontalAlignment": 0
+					} )
+					add( new FormComponent( "javax.swing.JTextField" ) {
+						name: "failTextField"
+						"text": "0"
+						"editable": false
+						"horizontalAlignment": 0
+					} )
+					add( new FormComponent( "javax.swing.JTextField" ) {
+						name: "passTextField"
+						"text": "0"
+						"editable": false
+						"horizontalAlignment": 0
+					} )
+					add( new FormComponent( "javax.swing.JTextField" ) {
+						name: "folderTextField"
+						"editable": false
+					} )
+					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+						"$horizontalGroup": "par l {seq {par l {seq {space :::p, par l {comp label1:::p:38:p, comp label2::l:p:38:p}, space :::p, par l:::p {comp raTextField::::113:x, comp decTextField::::113:x}, space :::p, par l {comp label3:::p::p, comp label4:::p::p}}, seq {space :10:10:p, comp autoCheckBox:::p::p}}, space :::x}}"
+						"$verticalGroup": "par l {seq l {space :::p, comp autoCheckBox:::p::p, space u:::p, par b {comp label1::b:p::p, comp raTextField::b:p::p, comp label3::b:p::p}, space u:::p, par b {comp label2::b:p::p, comp decTextField::b:p::p, comp label4::b:p::p}, space ::28:x}}"
+					} ) {
+						name: "panel1"
+						"border": new javax.swing.border.TitledBorder( "RA / Dec Coordinates" )
+						add( new FormComponent( "javax.swing.JCheckBox" ) {
+							name: "autoCheckBox"
+							"text": "Auto (get from fits header)"
+							"selected": true
+						} )
+						add( new FormComponent( "javax.swing.JLabel" ) {
+							name: "label1"
+							"text": "RA:"
+							"horizontalAlignment": 4
+						} )
+						add( new FormComponent( "javax.swing.JLabel" ) {
+							name: "label2"
+							"text": "Dec:"
+							"horizontalAlignment": 4
+						} )
+						add( new FormComponent( "javax.swing.JTextField" ) {
+							name: "raTextField"
+							"editable": false
+						} )
+						add( new FormComponent( "javax.swing.JTextField" ) {
+							name: "decTextField"
+							"editable": false
+						} )
+						add( new FormComponent( "javax.swing.JLabel" ) {
+							name: "label3"
+							"text": "HH:MM:SS"
+						} )
+						add( new FormComponent( "javax.swing.JLabel" ) {
+							name: "label4"
+							"text": "±DD:MM:SS"
+						} )
+					} )
+					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+						"$horizontalGroup": "par l {seq {space :::p, par l {comp logCheckBox:::p::p, par t:l::p {seq {comp label6:::p::p, space :::x, comp solvedTextField:::p:94:p}, seq {comp label5:::p::p, space :::p, comp widthSpinner:::p::p}}}, space ::11:x}}"
+						"$verticalGroup": "par l {seq l {space :::p, par b {comp label5::b:p::p, comp widthSpinner::b:p::p}, space u:::p, comp logCheckBox:::p::p, space u:::p, par b {comp label6::b:p::p, comp solvedTextField::b:p::p}, space ::27:x}}"
+					} ) {
+						name: "panel2"
+						"border": new javax.swing.border.TitledBorder( "Solver Settings" )
+						add( new FormComponent( "javax.swing.JLabel" ) {
+							name: "label5"
+							"text": "Minimum star size [sec]:"
+						} )
+						add( new FormComponent( "javax.swing.JSpinner" ) {
+							name: "widthSpinner"
+							"model": new javax.swing.SpinnerNumberModel( 1.5, 0.5, 4.0, 0.5 )
+						} )
+						add( new FormComponent( "javax.swing.JCheckBox" ) {
+							name: "logCheckBox"
+							"text": "Save solver log files"
+						} )
+						add( new FormComponent( "javax.swing.JTextField" ) {
+							name: "solvedTextField"
+							"text": "Solved"
+						} )
+						add( new FormComponent( "javax.swing.JLabel" ) {
+							name: "label6"
+							"text": "Solver subfolder:"
+						} )
+					} )
+					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+						"$horizontalGroup": "par l {seq l {space :::p, par l:::p {comp runButton:::::x, comp importButton:::::x}, space :::p}}"
+						"$verticalGroup": "par l {seq l {space :::p, comp importButton:::p::p, space u:::p, comp runButton:::p::p, space ::122:x}}"
+					} ) {
+						name: "panel3"
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "importButton"
+							"text": "Select Folder"
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "runButton"
+							"text": "Run ASTAP"
+						} )
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "Center"
+				} )
+			}, new FormLayoutConstraints( class java.lang.String ) {
+				"value": "Center"
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 45, 0 )
+			"size": new java.awt.Dimension( 620, 260 )
+		} )
+	}
+}
