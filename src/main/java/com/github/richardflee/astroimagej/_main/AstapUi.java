@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,12 +46,17 @@ import javax.swing.border.TitledBorder;
 public class AstapUi extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
-	private enum StateEnum {
+	private enum StatusEnum {
 		ASTAP_STARTED, ASTAP_STOPPED;
+	}
+	
+	private enum SolveEnum {
+		TEST_SOLVE_FITS, SOLVE_ALL_FITS;
 	}
 	
 	
 	// sub-folder to Solved folder, contains failed astap solve fits files
+	private final String SOLVED_FOLDER = "Solved";
 	private final String FAILED_FOLDER = "SOLVE_FAILED";
 	
 	// run button text
@@ -81,7 +87,7 @@ public class AstapUi extends JFrame {
 		
 		// start in astroimagej.exe folder
 		this.pathToFitsFolder = System.getProperty("user.dir");
-		updateFitsFilesList();
+		setFitsFilesList(SolveEnum.SOLVE_ALL_FITS);
 		
 		// astap not running at start-up
 		this.isAstapRunning = false;
@@ -97,7 +103,7 @@ public class AstapUi extends JFrame {
 			this.pathToFitsFolder = jfc.getSelectedFile().toString();
 			
 			// update list of fits file paths
-			updateFitsFilesList();
+			setFitsFilesList(SolveEnum.SOLVE_ALL_FITS);
 		}
 	}
 	
@@ -107,10 +113,10 @@ public class AstapUi extends JFrame {
 	 * 
 	 * <p>Task runs in a SwingWorker thread</p>
 	 */
-	private void doRunAstap() {
-		AstapUtils.deleteDirectory(Path.of(getPathToSolvedFolder()));
+	private void doRunAstap(SolveEnum en) {
+		// AstapUtils.deleteDirectory(Path.of(getPathToSolvedFolder()));
 		createSolvedFolders();
-		updateFitsFilesList();
+		setFitsFilesList(en);
 		try {
 			setCentreCoords();
 			this.astapTask = new AstapTask();
@@ -118,7 +124,7 @@ public class AstapUi extends JFrame {
 		} catch (Exception e) {
 			var message = "RA or Dec format error";
 			JOptionPane.showMessageDialog(null,  message);
-			configRunSettings(StateEnum.ASTAP_STOPPED);			
+			configRunSettings(StatusEnum.ASTAP_STOPPED);			
 		}
 	}
 	
@@ -142,15 +148,22 @@ public class AstapUi extends JFrame {
 		// sets button text and enabled status then toggle START / STOP astap solver
 		runButton.addActionListener(e -> {
 			if (!isAstapRunning) {
-				configRunSettings(StateEnum.ASTAP_STARTED);
-				doRunAstap();				
+				configRunSettings(StatusEnum.ASTAP_STARTED);
+				doRunAstap(SolveEnum.SOLVE_ALL_FITS);				
 			} else {
-				configRunSettings(StateEnum.ASTAP_STOPPED);
+				configRunSettings(StatusEnum.ASTAP_STOPPED);
 				doStopAstap();
 			}
 		});
+		
+		testButton.addActionListener(e -> {
+			System.out.println("testing");
+			configRunSettings(StatusEnum.ASTAP_STARTED);
+			setLogSelected(true);
+			doRunAstap(SolveEnum.TEST_SOLVE_FITS);
+		});
 
-		// If Auto checkbox selected (default state) astap reads ra and dec coordinates from fits header 
+		// If Auto check-box selected (default state) astap reads ra and dec coordinates from fits header 
 		// de-selecting Auto, enables text fields for user to input sexagesimal format coordinates
 		autoCheckBox.addActionListener(e -> {
 			if (autoCheckBox.isSelected()) {
@@ -175,18 +188,21 @@ public class AstapUi extends JFrame {
 		});
 	}
 	
-	private void configRunSettings(StateEnum en) {
+	private void configRunSettings(StatusEnum en) {
 		
 		switch (en) {
 			case ASTAP_STARTED:
 				runButton.setText(STOP);
+				testButton.setEnabled(false);
 				importButton.setEnabled(false);
 				isAstapRunning = true;			
 				break;
 				
 			case ASTAP_STOPPED:
 				runButton.setText(START);
+				testButton.setEnabled(true);
 				importButton.setEnabled(true);
+				setLogSelected(false);
 				isAstapRunning = false;			
 				break;
 		}
@@ -195,14 +211,24 @@ public class AstapUi extends JFrame {
 	/**
 	 * compiles a list of path strings for all fits files found in selected folder
 	 */
-	private void updateFitsFilesList() {		
+	private void setFitsFilesList(SolveEnum en) {	
+		
+		var paths =  getFitsFilePaths();
 		this.fitsFilePaths = getFitsFilePaths();
 		
 		// update ui field with name of selected folder and file counts
 		folderTextField.setText(this.pathToFitsFolder);
 		passTextField.setText("0");
 		failTextField.setText("0");
-		totalTextField.setText(String.format("%d", this.fitsFilePaths.size()));		
+		totalTextField.setText(String.format("%d", paths.size()));
+		switch (en) {
+			case SOLVE_ALL_FITS:
+				this.fitsFilePaths = paths;
+				break;
+			case TEST_SOLVE_FITS:
+				this.fitsFilePaths = Arrays.asList(paths.get(0));				
+				break;		
+		}
 	}
 
 
@@ -219,22 +245,38 @@ public class AstapUi extends JFrame {
 		return list;
 	}
 	
-	
+	/*
+	 * Returns path string to folder containing plate solved fits files
+	 * Defaults to "Solved" on start up or empty text field 
+	 */
 	private String getPathToSolvedFolder() {
-		var solvedFolder = solvedTextField.getText();
+		var solvedFolder = solvedTextField.getText().trim();
+		if (solvedFolder.length() == 0) {
+			solvedFolder = SOLVED_FOLDER;
+			solvedTextField.setText(SOLVED_FOLDER);
+		}
 		return this.pathToFitsFolder + File.separator + solvedFolder;
 	}
 	
+	/*
+	 * Returns path string to folder containing failed plate solve fits files
+	 */
 	private String getPathToFailedFolder() {		
 		return getPathToSolvedFolder() + File.separator + FAILED_FOLDER;
 	}
 	
-	
+	/*
+	 * Deletes existing solved folders and creates ./Solved and ./Solver/SOLVE_FAILED sub-folders
+	 */
 	private void createSolvedFolders() {
+		// delete existing solved folder, sub-folders + files
+		AstapUtils.deleteDirectory(Path.of(getPathToSolvedFolder()));
+		
+		// create empty solved & failed solve folders
 		try {
 			Files.createDirectories(Path.of(getPathToFailedFolder()));
 		} catch (IOException e1) {
-			var message = String.format("Error creating folder: %s", getPathToSolvedFolder());
+			var message = String.format("Error creating folder: %s\n", getPathToFailedFolder());
 			JOptionPane.showMessageDialog(null,  message);
 		}
 	}
@@ -314,20 +356,12 @@ public class AstapUi extends JFrame {
 		 */
 		@Override
 		protected void done() {
-			isAstapRunning = false;
-			runButton.setText(START);
-			importButton.setEnabled(true);
-			// deletes solve failed folder if empty, i.e. all solves were successful
-			AstapUtils.deleteFolderIfEmpty(getPathToFailedFolder());
+			configRunSettings(StatusEnum.ASTAP_STOPPED);
 			
-//			// deletes empty solve fail folder (ie all fits file solves were successful) 
-//			var file = new File(getPathToFailedFolder());
-//			if (file.length() == 0) {
-//				file.delete();
-//			}
+			// deletes solve failed folder if empty, i.e. all fits files were solved
+			AstapUtils.deleteFolderIfEmpty(getPathToFailedFolder());
 		}
 		
-		// TODO - user input Ra, dec
 		
 		/*
 		 * Runs Astap plate solve command line options in java ProcessBuilder task
@@ -377,7 +411,7 @@ public class AstapUi extends JFrame {
 			line = (isAutoSelected()) ? line : line.concat(compileUserCoords());
 			
 			// option to append -log flag
-			line = (isSaveLog() == false) ? line : line.concat(" -log");
+			line = (isLogSelected() == false) ? line : line.concat(" -log");
 			return line;
 		}
 		
@@ -404,12 +438,16 @@ public class AstapUi extends JFrame {
 		return (double) widthSpinner.getValue();
 	}
 	
-	private boolean isSaveLog() {
+	private boolean isLogSelected() {
 		return logCheckBox.isSelected();
 	}
 	
 	private boolean isAutoSelected() {
 		return autoCheckBox.isSelected();
+	}
+	
+	private void setLogSelected(boolean isSelected) {
+		logCheckBox.setSelected(isSelected);
 	}
 	
 	
@@ -442,6 +480,7 @@ public class AstapUi extends JFrame {
 		panel3 = new JPanel();
 		importButton = new JButton();
 		runButton = new JButton();
+		testButton = new JButton();
 
 		//======== this ========
 		setTitle("ASTAP for AstroImageJ");
@@ -460,24 +499,29 @@ public class AstapUi extends JFrame {
 
 				//---- fitsTextField ----
 				fitsTextField.setEditable(false);
+				fitsTextField.setToolTipText("Current Fits file");
 
 				//---- totalTextField ----
 				totalTextField.setText("0");
 				totalTextField.setEditable(false);
 				totalTextField.setHorizontalAlignment(SwingConstants.CENTER);
+				totalTextField.setToolTipText("TOTAL count");
 
 				//---- failTextField ----
 				failTextField.setText("0");
 				failTextField.setEditable(false);
 				failTextField.setHorizontalAlignment(SwingConstants.CENTER);
+				failTextField.setToolTipText("FAIL count");
 
 				//---- passTextField ----
 				passTextField.setText("0");
 				passTextField.setEditable(false);
 				passTextField.setHorizontalAlignment(SwingConstants.CENTER);
+				passTextField.setToolTipText("PASS count");
 
 				//---- folderTextField ----
 				folderTextField.setEditable(false);
+				folderTextField.setToolTipText("Path to Fits files folder");
 
 				//======== panel1 ========
 				{
@@ -486,6 +530,7 @@ public class AstapUi extends JFrame {
 					//---- autoCheckBox ----
 					autoCheckBox.setText("Auto (get from fits header)");
 					autoCheckBox.setSelected(true);
+					autoCheckBox.setToolTipText("<html>\nChecked: solver reads read Ra and Dec coordinates from Fits file header\n<p>\nUnchecked: user enters coordinates in sexagesimal format\n</p>\n</html>");
 
 					//---- label1 ----
 					label1.setText("RA:");
@@ -497,9 +542,11 @@ public class AstapUi extends JFrame {
 
 					//---- raTextField ----
 					raTextField.setEditable(false);
+					raTextField.setToolTipText("<html>\nEnter RA in range 00:00:00 to 23:59:59\n<p>\nNote: ':' delimiter\n</p>\n</html>");
 
 					//---- decTextField ----
 					decTextField.setEditable(false);
+					decTextField.setToolTipText("<html>\nEnter Dec in range 00:00:00 to \u00b189:59:59\n<p>\nNote: ':' delimiter\n</p>\n</html>");
 
 					//---- label3 ----
 					label3.setText("HH:MM:SS");
@@ -559,12 +606,15 @@ public class AstapUi extends JFrame {
 
 					//---- widthSpinner ----
 					widthSpinner.setModel(new SpinnerNumberModel(1.5, 0.5, 4.0, 0.5));
+					widthSpinner.setToolTipText("<html>\nSet minimum star size in range 0.5\" to 4.0\"\n<p>\n(Hot pixel filter)\n</p>\n</html>");
 
 					//---- logCheckBox ----
 					logCheckBox.setText("Save solver log files");
+					logCheckBox.setToolTipText("<html>\nChecked: saves plate solve log file\n<p>\nUnchecked: log file not saved (default)\n</p>\n</html>");
 
 					//---- solvedTextField ----
 					solvedTextField.setText("Solved");
+					solvedTextField.setToolTipText("<html>\nSub-folder to save solved Fits files\n<p>\nDefault: 'Solved'\n</p>\n</html>");
 
 					//---- label6 ----
 					label6.setText("Solver subfolder:");
@@ -610,29 +660,40 @@ public class AstapUi extends JFrame {
 
 					//---- importButton ----
 					importButton.setText("Select Folder");
+					importButton.setToolTipText("Opens dialog to select Fits files folder");
 
 					//---- runButton ----
 					runButton.setText("Run ASTAP");
+					runButton.setToolTipText("Runs ASTAP astrometric solver");
+
+					//---- testButton ----
+					testButton.setText("Test Solve");
+					testButton.setToolTipText("Test solve a single Fits file");
 
 					GroupLayout panel3Layout = new GroupLayout(panel3);
 					panel3.setLayout(panel3Layout);
 					panel3Layout.setHorizontalGroup(
 						panel3Layout.createParallelGroup()
+							.addGroup(GroupLayout.Alignment.TRAILING, panel3Layout.createSequentialGroup()
+								.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+								.addComponent(importButton)
+								.addContainerGap())
 							.addGroup(panel3Layout.createSequentialGroup()
 								.addContainerGap()
-								.addGroup(panel3Layout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
-									.addComponent(runButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-									.addComponent(importButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-								.addContainerGap())
+								.addGroup(panel3Layout.createParallelGroup()
+									.addComponent(runButton, GroupLayout.PREFERRED_SIZE, 93, GroupLayout.PREFERRED_SIZE)
+									.addComponent(testButton, GroupLayout.PREFERRED_SIZE, 93, GroupLayout.PREFERRED_SIZE))
+								.addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 					);
 					panel3Layout.setVerticalGroup(
 						panel3Layout.createParallelGroup()
 							.addGroup(panel3Layout.createSequentialGroup()
 								.addContainerGap()
-								.addComponent(importButton)
-								.addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
 								.addComponent(runButton)
-								.addContainerGap(122, Short.MAX_VALUE))
+								.addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+								.addComponent(testButton)
+								.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, 101, Short.MAX_VALUE)
+								.addComponent(importButton))
 					);
 				}
 
@@ -717,5 +778,6 @@ public class AstapUi extends JFrame {
 	private JPanel panel3;
 	private JButton importButton;
 	private JButton runButton;
+	private JButton testButton;
 	// JFormDesigner - End of variables declaration //GEN-END:variables
 }

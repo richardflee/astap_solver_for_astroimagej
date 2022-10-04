@@ -19,28 +19,33 @@ new FormModel {
 					add( new FormComponent( "javax.swing.JTextField" ) {
 						name: "fitsTextField"
 						"editable": false
+						"toolTipText": "Current Fits file"
 					} )
 					add( new FormComponent( "javax.swing.JTextField" ) {
 						name: "totalTextField"
 						"text": "0"
 						"editable": false
 						"horizontalAlignment": 0
+						"toolTipText": "TOTAL count"
 					} )
 					add( new FormComponent( "javax.swing.JTextField" ) {
 						name: "failTextField"
 						"text": "0"
 						"editable": false
 						"horizontalAlignment": 0
+						"toolTipText": "FAIL count"
 					} )
 					add( new FormComponent( "javax.swing.JTextField" ) {
 						name: "passTextField"
 						"text": "0"
 						"editable": false
 						"horizontalAlignment": 0
+						"toolTipText": "PASS count"
 					} )
 					add( new FormComponent( "javax.swing.JTextField" ) {
 						name: "folderTextField"
 						"editable": false
+						"toolTipText": "Path to Fits files folder"
 					} )
 					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
 						"$horizontalGroup": "par l {seq {par l {seq {space :::p, par l {comp label1:::p:38:p, comp label2::l:p:38:p}, space :::p, par l:::p {comp raTextField::::113:x, comp decTextField::::113:x}, space :::p, par l {comp label3:::p::p, comp label4:::p::p}}, seq {space :10:10:p, comp autoCheckBox:::p::p}}, space :::x}}"
@@ -52,6 +57,7 @@ new FormModel {
 							name: "autoCheckBox"
 							"text": "Auto (get from fits header)"
 							"selected": true
+							"toolTipText": "<html>\nChecked: solver reads read Ra and Dec coordinates from Fits file header\n<p>\nUnchecked: user enters coordinates in sexagesimal format\n</p>\n</html>"
 						} )
 						add( new FormComponent( "javax.swing.JLabel" ) {
 							name: "label1"
@@ -66,10 +72,12 @@ new FormModel {
 						add( new FormComponent( "javax.swing.JTextField" ) {
 							name: "raTextField"
 							"editable": false
+							"toolTipText": "<html>\nEnter RA in range 00:00:00 to 23:59:59\n<p>\nNote: ':' delimiter\n</p>\n</html>"
 						} )
 						add( new FormComponent( "javax.swing.JTextField" ) {
 							name: "decTextField"
 							"editable": false
+							"toolTipText": "<html>\nEnter Dec in range 00:00:00 to ±89:59:59\n<p>\nNote: ':' delimiter\n</p>\n</html>"
 						} )
 						add( new FormComponent( "javax.swing.JLabel" ) {
 							name: "label3"
@@ -93,14 +101,17 @@ new FormModel {
 						add( new FormComponent( "javax.swing.JSpinner" ) {
 							name: "widthSpinner"
 							"model": new javax.swing.SpinnerNumberModel( 1.5, 0.5, 4.0, 0.5 )
+							"toolTipText": "<html>\nSet minimum star size in range 0.5\" to 4.0\"\n<p>\n(Hot pixel filter)\n</p>\n</html>"
 						} )
 						add( new FormComponent( "javax.swing.JCheckBox" ) {
 							name: "logCheckBox"
 							"text": "Save solver log files"
+							"toolTipText": "<html>\nChecked: saves plate solve log file\n<p>\nUnchecked: log file not saved (default)\n</p>\n</html>"
 						} )
 						add( new FormComponent( "javax.swing.JTextField" ) {
 							name: "solvedTextField"
 							"text": "Solved"
+							"toolTipText": "<html>\nSub-folder to save solved Fits files\n<p>\nDefault: 'Solved'\n</p>\n</html>"
 						} )
 						add( new FormComponent( "javax.swing.JLabel" ) {
 							name: "label6"
@@ -108,17 +119,24 @@ new FormModel {
 						} )
 					} )
 					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
-						"$horizontalGroup": "par l {seq l {space :::p, par l:::p {comp runButton:::::x, comp importButton:::::x}, space :::p}}"
-						"$verticalGroup": "par l {seq l {space :::p, comp importButton:::p::p, space u:::p, comp runButton:::p::p, space ::122:x}}"
+						"$horizontalGroup": "par l {seq t {space :::x, comp importButton:::p::p, space :::p}, seq l {space :::p, par l {comp runButton:::p:93:p, comp testButton::l:p:93:p}, space :::x}}"
+						"$verticalGroup": "par l {seq l {space :::p, comp runButton:::p::p, space u:::p, comp testButton:::p::p, space ::101:x, comp importButton:::p::p}}"
 					} ) {
 						name: "panel3"
 						add( new FormComponent( "javax.swing.JButton" ) {
 							name: "importButton"
 							"text": "Select Folder"
+							"toolTipText": "Opens dialog to select Fits files folder"
 						} )
 						add( new FormComponent( "javax.swing.JButton" ) {
 							name: "runButton"
 							"text": "Run ASTAP"
+							"toolTipText": "Runs ASTAP astrometric solver"
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "testButton"
+							"text": "Test Solve"
+							"toolTipText": "Test solve a single Fits file"
 						} )
 					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
