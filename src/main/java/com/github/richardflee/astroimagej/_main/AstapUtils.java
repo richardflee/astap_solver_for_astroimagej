@@ -7,13 +7,14 @@ import java.nio.file.Path;
 import java.util.Arrays;
 
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * Contains static utility methods
  */
 public class AstapUtils {
-
+	
 	// JFileChooser dialog title
 	private static final String DIALOG_TITLE = "Open FITS Folder";
 
@@ -28,7 +29,6 @@ public class AstapUtils {
 		JFileChooser jfc = new JFileChooser(file);
 		jfc.setDialogTitle(DIALOG_TITLE);
 		jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		// var filter = new FileNameExtensionFilter("TEXT FILES", "txt", "text");
 		jfc.setFileFilter(new FileNameExtensionFilter("Fits Files", "fit", "fits", "fts"));
 		return jfc;
 	}
@@ -119,10 +119,12 @@ public class AstapUtils {
 		return isNegative ? (24.0 - raHr) : raHr;
 	}
 
+	
 	/**
-	 * Convert dec sexagesimal format to numeric value (dd.dddd).
-	 * @param decDms
-	 *     in sexagesimal format DD:MM:SS.SS
+	 * Convert dec in sexagesimal format to numeric value (dd.dddd).
+	 * 
+	 * @param decDms object declination in sexagesimal format DD:MM:SS.SS
+	 * @throws Exception non-specific exception
 	 * @return numeric dec in units deg (±dd.dddd)
 	 */
 	public static Double decDmsToDecDeg(String decDms) throws Exception {
@@ -141,24 +143,32 @@ public class AstapUtils {
 		return sign * (dd + mm / 60 + ss / 3600);
 	}
 
+	/**
+	 * Surrounds string with double quotations.
+	 * Enables path with spaces to be used in in ProcessBuilder expressions
+	 */
+	public static String applyEscQuotes(String line) {
+		var escQuote = "\"";
+		return escQuote + line + escQuote;
+	}
+	
+	/*
+	 * Compiles RA and Dec ASTAP command line fragment 
+	 */
 	private static String getUserCoords(String raHms, String decDms) {
-
 		double raHr = 0.0;
 		double spd = 0.0;
-
 		try {
 			raHr = AstapUtils.raHmsToRaHr(raHms);
 			spd = AstapUtils.decDmsToDecDeg(decDms) + 90.0;
-
 		} catch (Exception e) {
-			System.out.println("invalid");
+			var message = "Error compiling RA or Dec to ASTAP command line";
+			JOptionPane.showMessageDialog(null,  message);
 		}
 		return String.format("-ra %.6f -spd %.6f", raHr, spd);
 	}
 
 	public static void main(String[] args) {
-		
-		
 		String raHms = "10:42:24.602";
 		String decDms = "+07:26:06.29";		
 		String x = getUserCoords(raHms, decDms);
@@ -170,35 +180,3 @@ public class AstapUtils {
 		System.out.println(x);
 	}
 }
-
-//		try {
-//
-//			String raHms = "10:42:24.602";
-//			String decDms = "+07:26:06.29";
-//
-//			double deltaRa = Math.abs(10.706834 - raHmsToRaHr(raHms));
-//			double deltaDec = Math.abs(7.435081 - decDmsToDecDeg(decDms));
-//
-//			System.out.println(String.format("ra %s:   %.6f %b", raHms, raHmsToRaHr(raHms), deltaRa < 1e-6));
-//			System.out.println(String.format("dec %s:  %.6f %b", decDms, decDmsToDecDeg(decDms), deltaDec < 1e-6));
-//
-//			raHms = "10 42:24.602";
-//			double raHr = raHmsToRaHr(raHms);
-//
-//		} catch (Exception e) {
-//			System.out.println("invalid");
-//		}
-
-
-// raHms = "10:42:24.602";
-// decDms = "";
-// System.out.println(String.format("ra %s: %.6f %b", raHms, raHmsToRaHr(raHms),
-// deltaRa < 1e-6));
-//
-// try {
-// System.out.println(String.format("dec %s: %.6f %b", decDms,
-// decDmsToDecDeg(decDms), deltaDec < 1e-6));
-// } catch (Exception e) {
-// System.out.println("also invalid");
-// }
-// }

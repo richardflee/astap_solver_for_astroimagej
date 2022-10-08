@@ -2,7 +2,6 @@ package com.github.richardflee.astroimagej._main;
 
 /**
  * Data object encapsulates progress of astap plate solve processing
- *
  */
 
 public class AstapData {

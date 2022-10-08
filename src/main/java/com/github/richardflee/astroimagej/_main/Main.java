@@ -2,6 +2,7 @@ package com.github.richardflee.astroimagej._main;
 
 import java.awt.EventQueue;
 
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatLightLaf;
@@ -24,13 +25,19 @@ public class Main {
 		astapUi.setVisible(true);		
 	}
 
+	/**
+	 * Configures FlatLightLaf look and feel
+	 * Runs main app in EDT
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		
 		try {
 			// dashing flat laf light theme
 			UIManager.setLookAndFeel(new FlatLightLaf());
 		} catch (Exception ex) {
-			System.err.println("Failed to initialize LaF");
+			var message = "Failed to initialize FlatLightLaf";
+			JOptionPane.showMessageDialog(null,  message);
 		}
 		
 		// runs app in EDT (event dispatching thread)

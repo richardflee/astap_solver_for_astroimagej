@@ -54,6 +54,9 @@ public class AstapUi extends JFrame {
 		TEST_SOLVE_FITS, SOLVE_ALL_FITS;
 	}
 	
+	private static String sep = File.separator;
+	private static String pathToAstapExe =  
+			AstapUtils.applyEscQuotes(System.getenv("ProgramFiles") + sep + "astap" + sep + "astap.exe");
 	
 	// sub-folder to Solved folder, contains failed astap solve fits files
 	private final String SOLVED_FOLDER = "Solved";
@@ -157,7 +160,6 @@ public class AstapUi extends JFrame {
 		});
 		
 		testButton.addActionListener(e -> {
-			System.out.println("testing");
 			configRunSettings(StatusEnum.ASTAP_STARTED);
 			setLogSelected(true);
 			doRunAstap(SolveEnum.TEST_SOLVE_FITS);
@@ -404,8 +406,8 @@ public class AstapUi extends JFrame {
 		 * User coords: TBD
 		 */
 		private String compileAstapCmdLine(String spath) {
-			spath = "\"" + spath + "\"";
-			String line = String.format("astap.exe -f %s -r 10 -m %.3f -update", spath, getMinStarWidth());
+			spath = AstapUtils.applyEscQuotes(spath);
+			String line = String.format("%s -f %s -r 10 -m %.3f -update", pathToAstapExe, spath, getMinStarWidth());
 			
 			// option to specify ra spd (dec+90) coords
 			line = (isAutoSelected()) ? line : line.concat(compileUserCoords());
@@ -416,6 +418,7 @@ public class AstapUi extends JFrame {
 		}
 		
 	} // AstapTask 
+	
 	
 	/*
 	 * Compiles and returns line fragment comprising use-specified centre ra spd/dec coordinates
